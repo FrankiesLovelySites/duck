@@ -68,7 +68,7 @@
         #overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             color: yellow;
             display: flex;
             justify-content: center;
@@ -76,13 +76,14 @@
             z-index: 100;
             cursor: pointer;
             text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <h1>[ TO STOP THE DUCK, HOLD THE CTRL KEY WHEN IT APPEARS, PLEASE CLICK THE SCREEN NOW. ]</h1>
+        <h1>[ PRANK READY: CLICK ANYWHERE ON THIS BLACK SCREEN TO START ]</h1>
     </div>
 
     <img id="dancing-image" src="https://i.ytimg.com/vi/dxYwXWEsUJ0/maxresdefault.jpg" alt="Dancing">
@@ -91,8 +92,10 @@
         <h1 id="scream-text">AHHHHHHHHHHHHHHHHHHHHHHHHH</h1>
         <img id="scream-image" src="https://www.shutterstock.com/image-photo/portrait-closeup-angry-seagull-photo-260nw-1914989857.jpg" alt="Scream">
     </div>
-    <audio id="scream-audio" loop>
+
+    <audio id="scream-audio" loop preload="auto">
         <source src="https://drive.google.com/uc?export=download&id=18gVVVDlKy9ld9VFbaD_aiEPaugpgwj63" type="audio/mpeg">
+        <source src="https://www.soundjay.com/human/man-screaming-01.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -111,10 +114,18 @@
         let isScreaming = false;
         let prankReady = false;
 
+        // Force volume to max
+        screamAudio.volume = 1.0;
+
         // Unlock audio on first click
         overlay.addEventListener('click', () => {
             overlay.style.display = 'none';
             prankReady = true;
+            // Briefly play and pause to "prime" the audio engine
+            screamAudio.play().then(() => {
+                screamAudio.pause();
+                screamAudio.currentTime = 0;
+            }).catch(e => console.log("Audio prep failed, but will trigger on Ctrl."));
         });
 
         function animate() {
@@ -123,8 +134,8 @@
                 posY += velY;
                 rotation += 5;
 
-                const imgWidth = normalImg.clientWidth;
-                const imgHeight = normalImg.clientHeight;
+                const imgWidth = normalImg.clientWidth || 150;
+                const imgHeight = normalImg.clientHeight || 150;
 
                 if (posX + imgWidth >= window.innerWidth || posX <= 0) velX *= -1;
                 if (posY + imgHeight >= window.innerHeight || posY <= 0) velY *= -1;
@@ -153,15 +164,20 @@
             isScreaming = true;
             normalImg.style.display = 'none';
             screamContainer.style.display = 'flex';
-            screamAudio.play();
+            
+            // Play sound and handle potential errors
+            const playPromise = screamAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Playback failed. Make sure you clicked the screen first!");
+                });
+            }
 
             // High-speed flashing and rainbow text
             this.screamInterval = setInterval(() => {
                 body.classList.toggle('flash-red');
-                // Make the text change to a random color
                 const randomColor = Math.floor(Math.random()*16777215).toString(16);
                 screamText.style.color = "#" + randomColor;
-                // Make the text shake
                 screamText.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
             }, 40);
         }
