@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Screamer V2</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: 'Arial Black', sans-serif;
+            transition: background-color 0.05s;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- The Normal Dancing Image --- */
+        #dancing-image {
+            position: absolute;
+            width: 150px;
+            height: auto;
+            z-index: 10;
+            /* Smooth translation for movement */
+            will-change: transform, left, top;
+        }
+
+        /* --- The Screaming Elements --- */
+        #scream-text {
+            position: absolute;
+            display: none;
+            color: white;
+            font-size: 8vw;
+            text-align: center;
+            width: 100%;
+            top: 10%;
+            user-select: none;
+            z-index: 30;
+            text-shadow: 2px 2px 4px #000000;
+        }
+
+        #scream-image {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            /* Center the image precisely */
+            transform: translate(-50%, -50%);
+            max-width: 90vw;
+            max-height: 90vh;
+            z-index: 20;
+        }
+
+        /* Flash effect class */
+        .flash-red {
+            background-color: red !important;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="scream-text">AHHHHHHHHHHHHHHHHHHHHHHHHH</h1>
+    
+    <img id="dancing-image" src="https://i.ytimg.com/vi/dxYwXWEsUJ0/maxresdefault.jpg" alt="Normal Item">
+
+    <img id="scream-image" src="https://www.shutterstock.com/image-photo/portrait-closeup-angry-seagull-photo-260nw-1914989857.jpg" alt="Screaming Item">
+
+
+    <script>
+        const normalImg = document.getElementById('dancing-image');
+        const screamImg = document.getElementById('scream-image');
+        const screamText = document.getElementById('scream-text');
+        const body = document.body;
+
+        // Initial position and velocity for the dancing image
+        let posX = window.innerWidth / 2;
+        let posY = window.innerHeight / 2;
+        let velX = 5;
+        let velY = 5;
+        let rotation = 0;
+        let isScreaming = false;
+
+        // The animation loop for the dancing image
+        function animate() {
+            if (!isScreaming) {
+                // Update position
+                posX += velX;
+                posY += velY;
+                rotation += 2;
+
+                // Get current dimensions of the image so it bounces correctly
+                const imgWidth = normalImg.clientWidth || 150;
+                const imgHeight = normalImg.clientHeight || 150;
+
+                // Bounce off walls (reversing velocity)
+                if (posX + imgWidth >= window.innerWidth) {
+                    posX = window.innerWidth - imgWidth;
+                    velX *= -1;
+                } else if (posX <= 0) {
+                    posX = 0;
+                    velX *= -1;
+                }
+
+                if (posY + imgHeight >= window.innerHeight) {
+                    posY = window.innerHeight - imgHeight;
+                    velY *= -1;
+                } else if (posY <= 0) {
+                    posY = 0;
+                    velY *= -1;
+                }
+
+                // Apply new positions
+                normalImg.style.left = posX + 'px';
+                normalImg.style.top = posY + 'px';
+                // Add rotation for extra "dance" flavor
+                normalImg.style.transform = `rotate(${rotation}deg)`;
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // --- Controls ---
+
+        window.addEventListener('keydown', (event) => {
+            // Check specifically for left or right Control key and ensure we don't restart if holding
+            if (event.key === "Control" && !isScreaming) {
+                startScreaming();
+            }
+        });
+
+        window.addEventListener('keyup', (event) => {
+             // Stop only when Control is released
+            if (event.key === "Control") {
+                stopScreaming();
+            }
+        });
+
+        // --- Functions to switch states ---
+
+        function startScreaming() {
+            isScreaming = true;
+            
+            // Hide normal image
+            normalImg.style.display = 'none';
+            
+            // Show scream elements
+            screamImg.style.display = 'block';
+            screamText.style.display = 'block';
+            
+            // Start red flashing fast (30ms interval)
+            this.flashInterval = setInterval(() => {
+                body.classList.toggle('flash-red');
+            }, 30);
+        }
+
+        function stopScreaming() {
+            isScreaming = false;
+
+            // Hide scream elements
+            screamImg.style.display = 'none';
+            screamText.style.display = 'none';
+            
+            // Show normal image again
+            normalImg.style.display = 'block';
+            
+            // Reset background and stop flashing
+            body.classList.remove('flash-red');
+            clearInterval(this.flashInterval);
+        }
+
+        // Start the movement engine on load
+        animate();
+    </script>
+</body>
+</html>
