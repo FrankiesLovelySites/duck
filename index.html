@@ -3,173 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Screamer V2</title>
+    <title>The Ultimate Ctrl Screamer</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
             overflow: hidden;
             background-color: #1a1a1a;
             font-family: 'Arial Black', sans-serif;
-            transition: background-color 0.05s;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: background-color 0.02s;
         }
 
-        /* --- The Normal Dancing Image --- */
+        /* --- Normal Dancing Image --- */
         #dancing-image {
             position: absolute;
             width: 150px;
             height: auto;
             z-index: 10;
-            /* Smooth translation for movement */
             will-change: transform, left, top;
         }
 
         /* --- The Screaming Elements --- */
+        #scream-container {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 20;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
         #scream-text {
-            position: absolute;
-            display: none;
             color: white;
-            font-size: 8vw;
+            font-size: 10vw;
             text-align: center;
-            width: 100%;
-            top: 10%;
+            margin: 0;
+            padding: 20px;
             user-select: none;
-            z-index: 30;
-            text-shadow: 2px 2px 4px #000000;
+            z-index: 40;
+            text-shadow: 5px 5px 0px #000;
         }
 
         #scream-image {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            /* Center the image precisely */
-            transform: translate(-50%, -50%);
-            max-width: 90vw;
-            max-height: 90vh;
-            z-index: 20;
+            max-width: 80vw;
+            max-height: 60vh;
+            z-index: 30;
+            border: 5px solid white;
         }
 
-        /* Flash effect class */
+        /* Flash background class */
         .flash-red {
             background-color: red !important;
+        }
+
+        /* "Click to start" overlay for browser audio permissions */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            color: yellow;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            cursor: pointer;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <h1 id="scream-text">AHHHHHHHHHHHHHHHHHHHHHHHHH</h1>
-    
-    <img id="dancing-image" src="https://i.ytimg.com/vi/dxYwXWEsUJ0/maxresdefault.jpg" alt="Normal Item">
+    <div id="overlay">
+        <h1>[ CLICK TO START THE PRANK ]</h1>
+    </div>
 
-    <img id="scream-image" src="https://www.shutterstock.com/image-photo/portrait-closeup-angry-seagull-photo-260nw-1914989857.jpg" alt="Screaming Item">
+    <img id="dancing-image" src="https://i.ytimg.com/vi/dxYwXWEsUJ0/maxresdefault.jpg" alt="Dancing">
 
+    <div id="scream-container">
+        <h1 id="scream-text">AHHHHHHHHHHHHHHHHHHHHHHHHH</h1>
+        <img id="scream-image" src="https://www.shutterstock.com/image-photo/portrait-closeup-angry-seagull-photo-260nw-1914989857.jpg" alt="Scream">
+    </div>
+    <audio id="scream-audio" loop>
+        <source src="https://www.soundjay.com/human/man-screaming-01.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         const normalImg = document.getElementById('dancing-image');
-        const screamImg = document.getElementById('scream-image');
+        const screamContainer = document.getElementById('scream-container');
         const screamText = document.getElementById('scream-text');
+        const screamAudio = document.getElementById('scream-audio');
+        const overlay = document.getElementById('overlay');
         const body = document.body;
 
-        // Initial position and velocity for the dancing image
-        let posX = window.innerWidth / 2;
-        let posY = window.innerHeight / 2;
-        let velX = 5;
-        let velY = 5;
+        let posX = 100;
+        let posY = 100;
+        let velX = 7;
+        let velY = 7;
         let rotation = 0;
         let isScreaming = false;
+        let prankReady = false;
 
-        // The animation loop for the dancing image
+        // Unlock audio on first click
+        overlay.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            prankReady = true;
+        });
+
         function animate() {
             if (!isScreaming) {
-                // Update position
                 posX += velX;
                 posY += velY;
-                rotation += 2;
+                rotation += 5;
 
-                // Get current dimensions of the image so it bounces correctly
-                const imgWidth = normalImg.clientWidth || 150;
-                const imgHeight = normalImg.clientHeight || 150;
+                const imgWidth = normalImg.clientWidth;
+                const imgHeight = normalImg.clientHeight;
 
-                // Bounce off walls (reversing velocity)
-                if (posX + imgWidth >= window.innerWidth) {
-                    posX = window.innerWidth - imgWidth;
-                    velX *= -1;
-                } else if (posX <= 0) {
-                    posX = 0;
-                    velX *= -1;
-                }
+                if (posX + imgWidth >= window.innerWidth || posX <= 0) velX *= -1;
+                if (posY + imgHeight >= window.innerHeight || posY <= 0) velY *= -1;
 
-                if (posY + imgHeight >= window.innerHeight) {
-                    posY = window.innerHeight - imgHeight;
-                    velY *= -1;
-                } else if (posY <= 0) {
-                    posY = 0;
-                    velY *= -1;
-                }
-
-                // Apply new positions
                 normalImg.style.left = posX + 'px';
                 normalImg.style.top = posY + 'px';
-                // Add rotation for extra "dance" flavor
                 normalImg.style.transform = `rotate(${rotation}deg)`;
             }
             requestAnimationFrame(animate);
         }
 
-        // --- Controls ---
-
-        window.addEventListener('keydown', (event) => {
-            // Check specifically for left or right Control key and ensure we don't restart if holding
-            if (event.key === "Control" && !isScreaming) {
+        // CTRL Key Activation
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "Control" && prankReady && !isScreaming) {
                 startScreaming();
             }
         });
 
-        window.addEventListener('keyup', (event) => {
-             // Stop only when Control is released
-            if (event.key === "Control") {
+        window.addEventListener('keyup', (e) => {
+            if (e.key === "Control") {
                 stopScreaming();
             }
         });
 
-        // --- Functions to switch states ---
-
         function startScreaming() {
             isScreaming = true;
-            
-            // Hide normal image
             normalImg.style.display = 'none';
-            
-            // Show scream elements
-            screamImg.style.display = 'block';
-            screamText.style.display = 'block';
-            
-            // Start red flashing fast (30ms interval)
-            this.flashInterval = setInterval(() => {
+            screamContainer.style.display = 'flex';
+            screamAudio.play();
+
+            // High-speed flashing and rainbow text
+            this.screamInterval = setInterval(() => {
                 body.classList.toggle('flash-red');
-            }, 30);
+                // Make the text change to a random color
+                const randomColor = Math.floor(Math.random()*16777215).toString(16);
+                screamText.style.color = "#" + randomColor;
+                // Make the text shake
+                screamText.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
+            }, 40);
         }
 
         function stopScreaming() {
             isScreaming = false;
-
-            // Hide scream elements
-            screamImg.style.display = 'none';
-            screamText.style.display = 'none';
-            
-            // Show normal image again
             normalImg.style.display = 'block';
+            screamContainer.style.display = 'none';
+            screamAudio.pause();
+            screamAudio.currentTime = 0;
             
-            // Reset background and stop flashing
             body.classList.remove('flash-red');
-            clearInterval(this.flashInterval);
+            clearInterval(this.screamInterval);
         }
 
-        // Start the movement engine on load
         animate();
     </script>
 </body>
